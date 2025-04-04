@@ -103,7 +103,10 @@
             currX = 0,
             prevY = 0,
             currY = 0,
-            dot_flag = false;
+            dot_flag = false,
+            draggingImg = false,
+            imgX = 0,
+            imgY = 0;
 
         var x = "black",
             y = 2;
@@ -167,7 +170,6 @@
             var m = confirm("Want to clear");
             if (m) {
                 ctx.clearRect(0, 0, w, h);
-                document.getElementById("canvasimg").style.display = "none";
             }
         }
 
@@ -196,21 +198,30 @@
                 currX = clientX - canvas.getBoundingClientRect().left;
                 currY = clientY - canvas.getBoundingClientRect().top;
 
-                flag = true;
-                dot_flag = true;
-                if (dot_flag) {
-                    ctx.beginPath();
-                    ctx.fillStyle = x;
-                    ctx.fillRect(currX, currY, 2, 2);
-                    ctx.closePath();
-                    dot_flag = false;
+                if (img && currX >= imgX && currX <= imgX + imgWidth && currY >= imgY && currY <= imgY + imgHeight) {
+                    draggingImg = true;
+                } else {
+                    flag = true;
+                    dot_flag = true;
+                    if (dot_flag) {
+                        ctx.beginPath();
+                        ctx.fillStyle = x;
+                        ctx.fillRect(currX, currY, 2, 2);
+                        ctx.closePath();
+                        dot_flag = false;
+                    }
                 }
             }
             if (res == 'up' || res == "out") {
                 flag = false;
+                draggingImg = false;
             }
             if (res == 'move') {
-                if (flag) {
+                if (draggingImg) {
+                    imgX = clientX - canvas.getBoundingClientRect().left - imgWidth / 2;
+                    imgY = clientY - canvas.getBoundingClientRect().top - imgHeight / 2;
+                    redrawCanvas();
+                } else if (flag) {
                     prevX = currX;
                     prevY = currY;
                     currX = clientX - canvas.getBoundingClientRect().left;
@@ -291,8 +302,17 @@
         function addImageToCanvas() {
             let preview = document.getElementById('preview');
             let scale = preview.width / imgWidth;
-            ctx.drawImage(img, 0, 0, imgWidth * scale, imgHeight * scale);
+            imgWidth = img.width * scale;
+            imgHeight = img.height * scale;
+            imgX = 0;
+            imgY = 0;
+            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
             document.getElementById('preview-container').style.display = 'none';
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, w, h);
+            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
         }
     </script>
 </body>
